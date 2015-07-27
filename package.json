@@ -16,5 +16,8 @@
     "url": "https://github.com/steboo/kudzu/issues"
   },
   "homepage": "https://github.com/steboo/kudzu",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "engine.io": "^1.5.2"
+  }
 }
