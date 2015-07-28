@@ -18,6 +18,7 @@
   "homepage": "https://github.com/steboo/kudzu",
   "private": true,
   "dependencies": {
-    "engine.io": "^1.5.2"
+    "engine.io": "^1.5.2",
+    "ws": "^0.7.2"
   }
 }
