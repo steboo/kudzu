@@ -1,2 +1,2 @@
-var socketServer = require('./socketServer');
-socketServer.init(9000);
+var kudzu = require('./kudzu');
+kudzu.initWorld(9000);

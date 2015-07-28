@@ -1,4 +1,14 @@
 var kudzu = (function() {
+    var socketServer = require('./socketServer');
+
+    const STATUS_ACTIVE = 0;
+    const STATUS_SUSPENDED = 1;
+
+    function World() {
+	this.name = "Earth"; // TODO: expand possibilities, and make sure the planet doesn't already exist (register with other servers)
+	this.status = STATUS_ACTIVE;
+    }
+
     function Player() {
 	this.goats = [new Goat()];
     }
@@ -11,13 +21,6 @@ var kudzu = (function() {
 	this.wanderLust = 0; // For future use
     };
 
-    function Kudzu() {
-	this.desirability = 88;
-	this.name = "kudzu";
-	this.nourishment = 1;
-	this.prominence = 80;
-    };
-
     function Knapweed() {
 	this.desirability = 87;
 	this.name = "knapweed";
@@ -25,7 +28,45 @@ var kudzu = (function() {
 	this.prominence = 80;
     };
 
-    return {
-	Player: Player;
+    function Kudzu() {
+	this.desirability = 88;
+	this.name = "kudzu";
+	this.nourishment = 1;
+	this.prominence = 80;
+    };
+
+    var world;
+
+    // We need to be able to start the world, though perhaps it should pause when no one's online.
+    function initWorld(port) {
+	socketServer.init(port);
+	if (world) {
+	    activateWorld();
+	} else {
+	    world = new World(); // TODO: should support saving/loading world
+	}
     }
+
+    function activateWorld() {
+	world.status = STATUS_ACTIVE;
+    }
+
+    function suspendWorld() {
+	world.status = STATUS_SUSPENDED;
+    }
+
+    // We need to be able to add players to the world
+    function addPlayer(world) {
+	var player = new Player();
+	world.players.push(player);
+
+	return player;
+    }
+
+    return {
+	addPlayer: addPlayer,
+	initWorld: initWorld
+    };
 })();
+
+module.exports = kudzu;
