@@ -1,4 +1,4 @@
-var kudzu = require('./kudzu');
+var kudzu = require('./server/kudzu');
 
 var port = 9000;
 
