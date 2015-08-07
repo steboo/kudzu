@@ -1,16 +1,21 @@
 var kudzu = (function() {
     var socketServer = require('./socketServer');
+    var broadcastMessage,
+	timer;
 
     const STATUS_ACTIVE = 0;
     const STATUS_SUSPENDED = 1;
 
     function World() {
 	this.name = "Earth"; // TODO: expand possibilities, and make sure the planet doesn't already exist (register with other servers)
-	this.status = STATUS_ACTIVE;
+	this.players = [];
+	this.status = STATUS_SUSPENDED;
     }
 
-    function Player() {
+    function Player(socket) {
 	this.goats = [new Goat()];
+	this.socket = socket;
+	this.world = null;
     }
 
     function Goat() {
@@ -37,30 +42,116 @@ var kudzu = (function() {
 
     var world;
 
-    // We need to be able to start the world, though perhaps it should pause when no one's online.
+    // We need to be able to start the world; it should pause when no one's online.
     function initWorld(port) {
-	socketServer.init(port);
 	if (world) {
 	    activateWorld();
 	} else {
 	    world = new World(); // TODO: should support saving/loading world
 	}
+
+	socketServer.init(port, function(listener) {
+	    broadcastMessage = listener.broadcast;
+	    listener.on('connection', function(socket) {
+		activateWorld();
+
+		listener.broadcast("Someone connected to the server!");
+
+		var player = addPlayer(world, socket);
+
+		if (player) {
+		    var numPlayers = listener.clients.length - 1;
+
+		    socket.send("Welcome, player!");
+		    socket.send("You have " + player.goats.length + " goat(s).");
+		    socket.send("There are " + numPlayers + " other players connected.");
+		} else {
+		    socket.send("There was an error setting up or loading your game. Please try again.");
+		}
+
+		socket.on('close', function() {
+		    var player = getPlayerBySocket(socket);
+		    removePlayer(player);
+		    if (listener.clients.length == 0) {
+			suspendWorld();
+		    }
+		});
+	    });
+
+	});
+
     }
 
     function activateWorld() {
-	world.status = STATUS_ACTIVE;
+	if (world.status == STATUS_SUSPENDED) {
+	    world.status = STATUS_ACTIVE;
+	    timer = setInterval(tick, 5000);
+	}
     }
 
+    // FIXME: potential exploit: log in/out/in/out as only player to trigger instant ticks!
     function suspendWorld() {
+	console.log("Suspending world.");
 	world.status = STATUS_SUSPENDED;
+        clearInterval(timer);
     }
 
     // We need to be able to add players to the world
-    function addPlayer(world) {
-	var player = new Player();
+    function addPlayer(world, socket) {
+	var player = new Player(socket);
 	world.players.push(player);
+	player.world = world;
 
 	return player;
+    }
+
+    // And remove them, too!
+    function removePlayer(player) {
+	var worldPlayers = player.world.players;
+	var playerIndex = worldPlayers.indexOf(player);
+
+	if (playerIndex > -1) {
+	    worldPlayers.splice(playerIndex, 1);
+	}
+    }
+
+    // Look up a player by their socket
+    function getPlayerBySocket(socket) {
+	var socketPlayer = world.players.find(function(player) {
+	    return player.socket == socket;
+	});
+	return socketPlayer;
+    }
+
+    // Make the world go 'round!
+    function tick() {
+	if (world.status == STATUS_ACTIVE) {
+	    console.log("Tick!");
+	    broadcastMessage("Tick!");
+	}
+    }
+
+    if (!Array.prototype.find) {
+	Array.prototype.find = function(predicate) {
+	    if (this === null) {
+		throw new TypeError('Array.prototype.find called on null or undefined');
+	    }
+	    if (typeof predicate !== 'function') {
+		throw new TypeError('predicate must be a function');
+	    }
+	    var list = Object(this);
+	    var length = list.length >>> 0;
+	    var thisArg = arguments[1];
+	    var value;
+	    
+	    for (var i = 0; i < length; i++) {
+		value = list[i];
+		if (predicate.call(thisArg, value, i, list)) {
+		    return value;
+		}
+	    }
+	    return undefined;
+	};
     }
 
     return {
