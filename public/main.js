@@ -44,10 +44,16 @@
         };
 
         ws.onclose = function (e) {
+            var displayMessage = 'The connection to the server was closed.';
             logDebug(e);
+
+            if (e.reason) {
+                displayMessage = displayMessage + ' Reason: ' + e.reason;
+            }
+
             $('.output')
                 .append(
-                    $('<p></p>').text('The connection to the server was closed. Reason: ' + e.reason)
+                    $('<p></p>').text(displayMessage)
                 ).scrollTop($('.output')[0].scrollHeight);
             $('.connection')
                 .removeClass('wait')
@@ -89,35 +95,20 @@
     }
 
     function bind() {
-        $('form.choices').on('click', 'button.reconnect', function (e) {
+        $('form.actions').on('click', 'button.reconnect', function (e) {
             e.preventDefault();
             resetState();
             wsInit(wsUri);
         });
 
-        $('#input').on('keydown', function (e) {
-            if (e.keyCode == 13) {
-                e.stopPropagation();
-                e.preventDefault();
-                if (e.target.value) {
-                    $('button.send').trigger('click');
-                }
-            }
+        $('form.actions').on('click', 'button.action', function (e) {
+            e.preventDefault();
+            ws.send('increment');
         });
     }
 
-    function updateNews(news) {
-        var $newsItem = $('<li></li>').text(news)
-            .prependTo('.news');
-
-        $newsItem.delay(30000)
-            .fadeOut(2000, function() {
-                $newsItem.remove();
-            });
-    }
-
     function createReconnectButton() {
-        var form = $('form.choices').empty();
+        var form = $('form.actions').empty();
         var button = $('<button></button>').addClass('reconnect').attr('data-action', 'reconnect').text('Reconnect');
         form.append(button);
     }
