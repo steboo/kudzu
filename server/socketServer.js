@@ -4,7 +4,7 @@ var ws = require('ws'),
 var socketServer = function() {
     var data = null,
         timerID = null,
-	socketServer = null,
+	listener = null,
 	WebSocketServer = ws.Server,
 //	http = require('http'),
 //	fs = require('fs'),
@@ -53,22 +53,22 @@ var socketServer = function() {
 	    });
 
 	    socketDomain.run(function() { 
-		socketServer = new WebSocketServer({ port: port });
+		listener = new WebSocketServer({ port: port });
 
-		socketServer.broadcast = function(data) {
-		    socketServer.clients.forEach(function(client) {
+		listener.broadcast = function(data) {
+		    listener.clients.forEach(function(client) {
 			client.send(data);
 		    });
 		};
 
-		socketServer.on('listening',function(){
+		listener.on('listening',function(){
 		    console.log('SocketServer is running');
 		});
 
-		socketServer.on('connection', function (socket) {
+		listener.on('connection', function (socket) {
 
 		    console.log('Connected to client');
-		    if (data == null) getQuotes();
+//		    if (data == null) getQuotes();
 
 		    socket.on('message', function (data) { 
 			console.log('Message received:', data);
@@ -78,7 +78,7 @@ var socketServer = function() {
 			try {
 			    socket.close();
 
-			    if (socketServer.clients.length == 0) {
+			    if (listener.clients.length == 0) {
 				clearInterval(timerID);
 				data = null;
 			    }
@@ -99,9 +99,9 @@ var socketServer = function() {
 	},
 
 	sendQuote = function() {
-	    if (socketServer.clients.length > 0) {
+	    if (listener.clients.length > 0) {
 		var randomQuoteIndex = Math.floor(Math.random() * data.quotes.length);
-		socketServer.broadcast(data.quotes[randomQuoteIndex]);
+		listener.broadcast(data.quotes[randomQuoteIndex]);
 	    }
 	},
 
@@ -112,9 +112,10 @@ var socketServer = function() {
 
 	},
 
-	init = function(socketPort) {
+	init = function(socketPort, callback) {
 //	    httpListen(httpPort);
 	    socketListen(socketPort);
+	    callback(listener);
 	};
 
     return {
