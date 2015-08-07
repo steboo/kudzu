@@ -1,4 +1,5 @@
 var kudzu = (function() {
+    var names = require('./names.js');
     var socketServer = require('./socketServer');
     var broadcastMessage,
 	timer;
@@ -9,6 +10,7 @@ var kudzu = (function() {
     function World() {
 	this.name = "Earth"; // TODO: expand possibilities, and make sure the planet doesn't already exist (register with other servers)
 	this.players = [];
+	this.resources = [Knapweed, Kudzu];
 	this.status = STATUS_SUSPENDED;
     }
 
@@ -21,7 +23,7 @@ var kudzu = (function() {
     function Goat() {
 	this.gender = (Math.random() > 0.5 ? "F" : "M");
 	this.maxHunger = 50 + (Math.random() * 50);
-	this.name = (this.gender == "M" ? "Billy" : "Nanny"); // TODO: expand possibilities
+	this.name = names.pickName(this.gender);
 	this.pickiness = 50 + (Math.random() * 50);
 	this.wanderLust = 0; // For future use
     };
@@ -44,9 +46,7 @@ var kudzu = (function() {
 
     // We need to be able to start the world; it should pause when no one's online.
     function initWorld(port) {
-	if (world) {
-	    activateWorld();
-	} else {
+	if (!world) {
 	    world = new World(); // TODO: should support saving/loading world
 	}
 
@@ -69,6 +69,15 @@ var kudzu = (function() {
 		    socket.send("There was an error setting up or loading your game. Please try again.");
 		}
 
+		socket.on('message', function(data) {
+		    var player = getPlayerBySocket(socket);
+		    if (data == "graze") {
+			player.goats.forEach(function(goat) {
+			    graze(player, goat);
+			});
+		    }
+		});
+
 		socket.on('close', function() {
 		    var player = getPlayerBySocket(socket);
 		    removePlayer(player);
@@ -89,7 +98,6 @@ var kudzu = (function() {
 	}
     }
 
-    // FIXME: potential exploit: log in/out/in/out as only player to trigger instant ticks!
     function suspendWorld() {
 	console.log("Suspending world.");
 	world.status = STATUS_SUSPENDED;
@@ -129,6 +137,16 @@ var kudzu = (function() {
 	    console.log("Tick!");
 	    broadcastMessage("Tick!");
 	}
+    }
+
+    function graze(player, goat) {
+	var resource = new (randomElement(world.resources));
+	player.socket.send(goat.name + " munches on some " + resource.name + ".");
+    }
+
+    function randomElement(array) {
+	var index = Math.floor(Math.random() * array.length);
+	return array[index];
     }
 
     if (!Array.prototype.find) {

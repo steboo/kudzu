@@ -6,46 +6,10 @@ var socketServer = function() {
         timerID = null,
 	listener = null,
 	WebSocketServer = ws.Server,
-//	http = require('http'),
-//	fs = require('fs'),
 	url = require('url'),
 	domain = require('domain'),
 	socketDomain = domain.create(),
 	httpDomain = domain.create(),
-
-/*	httpListen = function (port) {
-	    httpDomain.on('error', function (err) {
-		console.log('Error caught in http domain:' + err);
-	    });
-
-	    httpDomain.run(function () {
-		http.createServer(function (req, res) {
-		    var pathname = url.parse(req.url).pathname;
-		    console.log(pathname);
-		    if (pathname == '/' || pathname == '/index.html') {
-			readFile(res, 'index.html');
-		    }
-		    else {
-			readFile(res, '.' + pathname);
-		    }
-		}).listen(port);
-	    });
-	},*/
-
-/*	readFile = function(res, pathname) {
-	    fs.readFile(pathname, function (err, data) {
-		if (err) {
-		    console.log(err.message);
-		    res.writeHead(404, {'content-type': 'text/html'});
-		    res.write('File not found: ' + pathname);
-		    res.end();
-		}
-		else {
-		    res.write(data);
-		    res.end();
-		}
-	    });       
-	},*/
 
 	socketListen = function(port) {
 	    socketDomain.on('error', function(err) {
@@ -113,7 +77,6 @@ var socketServer = function() {
 	},
 
 	init = function(socketPort, callback) {
-//	    httpListen(httpPort);
 	    socketListen(socketPort);
 	    callback(listener);
 	};
