@@ -35,7 +35,7 @@ var socketServer = function() {
 //		    if (data == null) getQuotes();
 
 		    socket.on('message', function (data) { 
-			console.log('Message received:', data);
+//			console.log('Message received:', data);
 		    });
 
 		    socket.on('close', function () {

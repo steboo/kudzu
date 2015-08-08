@@ -10,7 +10,7 @@ var kudzu = (function() {
     function World() {
 	this.name = "Earth"; // TODO: expand possibilities, and make sure the planet doesn't already exist (register with other servers)
 	this.players = [];
-	this.resources = [knapweed, kudzu];
+	this.resources = [knapweed, kudzu, rocks, tin];
 	this.status = STATUS_SUSPENDED;
     }
 
@@ -19,6 +19,7 @@ var kudzu = (function() {
 	this.goats = [new Goat()];
 	this.resources = {};
 	this.socket = socket;
+	this.title = "the new kid"; // Maybe each goat should get a title
 	this.world = null;
     }
 
@@ -47,13 +48,18 @@ var kudzu = (function() {
 				  graze(player, goat);
 			      });
 			  }),
-	goat: new Action({"kudzu": 15},
-			 function(player) {
-			     var enoughResources = checkResources(player, this.cost);
-			     console.log("Enough for goat (need ", this.cost, ")? ", enoughResources);
-			     return enoughResources;
-			 },
-			 goat)
+	goat: new Action(
+	    function(player) {
+		var goats = player.goats.length;
+		return { "kudzu": Math.floor(1.5 * Math.pow((goats + 2), 2)) + 2 };
+	    },
+	    function(player) {
+		var cost = (typeof(this.cost) == "function" ? this.cost(player) : this.cost);
+		var enoughResources = checkResources(player, cost);
+		console.log("Enough for goat (need ", cost, ")? ", enoughResources);
+		return enoughResources;
+	    },
+	    goat)
     };
     
 /* Resources */
@@ -74,6 +80,24 @@ var kudzu = (function() {
     };
 
 
+    var rocks = {
+	desirability: 0.02,
+	minExplored: 5, // Might need later adjustment
+	name: { singular: "rock",
+		plural: "rocks" },
+	nourishment: 0.01,
+	prominence: 0.4
+    };
+
+    var tin = {
+	desirability: 0.3,
+	minExplored: 25, // Might need later adjustment
+	name: { singular: "tin can",
+		plural: "tin cans" },
+	nourishment: 0.01,
+	prominence: 0.1
+    };
+    
 /* World Management */
     var world;
 
@@ -150,11 +174,17 @@ var kudzu = (function() {
 
     // And remove them, too!
     function removePlayer(player) {
-	var worldPlayers = player.world.players;
-	var playerIndex = worldPlayers.indexOf(player);
-
-	if (playerIndex > -1) {
-	    worldPlayers.splice(playerIndex, 1);
+	if (player) {
+	    var worldPlayers = player.world.players;
+	    var playerIndex = worldPlayers.indexOf(player);
+	    
+	    if (playerIndex > -1) {
+		worldPlayers.splice(playerIndex, 1);
+	    }
+	} else {
+	    world.players.filter(function(value) {
+		return value !== null;
+	    });
 	}
     }
 
@@ -201,12 +231,14 @@ var kudzu = (function() {
     
 /* Resource Handling */
     function addResource(player, resource, amount) {
-	if (!player.resources[resource]) {
-	    player.resources[resource] = 0;
+	var name = resource.name.plural || resource.name;
+
+	if (!player.resources[name]) {
+	    player.resources[name] = 0;
 	}
-	player.resources[resource] += amount;
+	player.resources[name] += amount;
 	
-	return player.resources[resource];
+	return player.resources[name];
     }
 
     function removeResource(player, resource, amount) {
@@ -255,30 +287,37 @@ var kudzu = (function() {
 
     function goat(player) {
 	var newGoat = new Goat();
-
-	if (removeResources(player, actions.goat.cost)) {
+	var cost = (typeof(actions.goat.cost) == "function" ? actions.goat.cost(player) : actions.goat.cost);
+	
+	if (removeResources(player, cost)) {
 	    player.goats.push(newGoat);
 	    sendMessage(player, "A new goat joins your herd!");
 	}
     }
     
     function graze(player, goat) {
-	var resource = randomElement(world.resources);
-	var amount = Math.random() * resource.prominence * 4; // FIXME
+	var resource = randomElement(availableResources(player));
+//	var amount = Math.ceil(Math.random() * resource.prominence * 4); // FIXME
+	var amount = 1;
 	var willEat = (Math.random() <= (((1 - goat.pickiness) + resource.desirability) * 0.65 +
 					 (goat.hunger / goat.maxHunger) * 0.35));
+	var resName = resource.name.plural || resource.name;
+
 	if (willEat) {
-	    sendMessage(player, goat.name + " munches on some " + resource.name + " (hunger now " + goat.hunger + "/" + goat.maxHunger + ".");
+	    sendMessage(player, goat.name + " munches on some " + resName + " (hunger now " + goat.hunger + "/" + goat.maxHunger + ".");
 	    eat(goat, resource, amount);
 	} else {
-	    var invAmount = addResource(player, resource.name, 1);
-	    sendMessage(player, goat.name + " returns with some " + resource.name + ". You now have " + invAmount + " " + resource.name + ".");
+	    var invAmount = addResource(player, resource, amount);
+	    sendMessage(player, goat.name + " returns with some " + resName + ". You now have " + invAmount + " " + (invAmount > 1 ? resName : resource.name.singular || resource.name) + ".");
 	}
+
+	// For now, grazing will increment the player's explored counter by 1/8 automagically. Make this a chance or something later, probably?
+	player.explored += 0.125;
     }
 
     function attack(player, target) {
-	sendMessage(player, "You are attacking another player!");
-	sendMessage(target, "You are being attacked by another player's goats!");
+	sendMessage(player, "You are attacking the herd of " + target.goats[0].name + " " + target.title + "!");
+	sendMessage(target, "You are being attacked by the herd of " + player.goats[0].name + " " + player.title + "!");
     }
 
 
@@ -297,6 +336,18 @@ var kudzu = (function() {
 		available.push(action);
 	    }
 	}
+
+	return available;
+    }
+
+    function availableResources(player) {
+	var available = [];
+	
+	player.world.resources.forEach(function(resource) {
+	    if (player.explored >= resource.minExplored) {
+		available.push(resource);
+	    }
+	});
 
 	return available;
     }
