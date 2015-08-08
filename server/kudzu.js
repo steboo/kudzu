@@ -10,44 +10,77 @@ var kudzu = (function() {
     function World() {
 	this.name = "Earth"; // TODO: expand possibilities, and make sure the planet doesn't already exist (register with other servers)
 	this.players = [];
-	this.resources = [Knapweed, Kudzu];
+	this.resources = [knapweed, kudzu];
 	this.status = STATUS_SUSPENDED;
     }
 
     function Player(socket) {
+	this.explored = 0;
 	this.goats = [new Goat()];
+	this.resources = {};
 	this.socket = socket;
 	this.world = null;
     }
 
     function Goat() {
 	this.gender = (Math.random() > 0.5 ? "F" : "M");
-	this.maxHunger = 50 + (Math.random() * 50);
+	this.maxHunger = 0.5 + (Math.random() * 0.5);
+	this.hunger = this.maxHunger / 2;
 	this.name = names.pickName(this.gender);
-	this.pickiness = 50 + (Math.random() * 50);
+	this.pickiness = 0.5 + (Math.random() * 0.5);
 	this.wanderLust = 0; // For future use
     };
 
-    function Knapweed() {
-	this.desirability = 87;
-	this.name = "knapweed";
-	this.nourishment = 0.8;
-	this.prominence = 80;
+/* Actions */
+
+    function Action(cost, prereq, effect) {
+	this.cost = cost;
+	this.prereq = prereq;
+	this.effect = effect;
+    }
+    
+    var actions = {
+	graze: new Action(null,
+			  null,
+			  function(player) {
+			      player.goats.forEach(function(goat) {
+				  graze(player, goat);
+			      });
+			  }),
+	goat: new Action({"kudzu": 15},
+			 function(player) {
+			     var enoughResources = checkResources(player, this.cost);
+			     console.log("Enough for goat (need ", this.cost, ")? ", enoughResources);
+			     return enoughResources;
+			 },
+			 goat)
+    };
+    
+/* Resources */
+    var knapweed = {
+	desirability: 0.67,
+	minExplored: 0,
+	name: "knapweed",
+	nourishment: 0.8,
+	prominence: 0.8
     };
 
-    function Kudzu() {
-	this.desirability = 88;
-	this.name = "kudzu";
-	this.nourishment = 1;
-	this.prominence = 80;
+    var kudzu = {
+	desirability: 0.68,
+	minExplored: 0,
+	name: "kudzu",
+	nourishment: 1,
+	prominence: 0.8
     };
 
+
+/* World Management */
     var world;
 
     // We need to be able to start the world; it should pause when no one's online.
     function initWorld(port) {
 	if (!world) {
-	    world = new World(); // TODO: should support saving/loading world
+	    world = new World(); // TODO: should support saving/loading world (or should it?!)
 	}
 
 	socketServer.init(port, function(listener) {
@@ -62,7 +95,7 @@ var kudzu = (function() {
 		if (player) {
 		    var numPlayers = listener.clients.length - 1;
 
-		    socket.send("Welcome, player!");
+		    socket.send("Welcome to " + world.name + "!");
 		    socket.send("You have " + player.goats.length + " goat(s).");
 		    socket.send("There are " + numPlayers + " other players connected.");
 		} else {
@@ -71,10 +104,12 @@ var kudzu = (function() {
 
 		socket.on('message', function(data) {
 		    var player = getPlayerBySocket(socket);
-		    if (data == "graze") {
-			player.goats.forEach(function(goat) {
-			    graze(player, goat);
-			});
+		    if (actions[data] &&
+			(actions[data].prereq ? actions[data].prereq(player) : true)) {
+			actions[data].effect(player);
+		    } else if (data == "attack") {
+			var target = randomPlayer(player);
+			attack(player, target);
 		    }
 		});
 
@@ -123,6 +158,20 @@ var kudzu = (function() {
 	}
     }
 
+    // Grab a random player (but not the one passed in)
+    function randomPlayer(player, targetWorld) {
+	targetWorld = targetWorld || player.world || world;
+
+	var playerList = targetWorld.players;
+	
+	if (player) {
+	    playerIndex = playerList.indexOf(player);
+	    playerList.splice(playerIndex, 1);
+	}
+
+	return randomElement(playerList);
+    }
+
     // Look up a player by their socket
     function getPlayerBySocket(socket) {
 	var socketPlayer = world.players.find(function(player) {
@@ -136,14 +185,169 @@ var kudzu = (function() {
 	if (world.status == STATUS_ACTIVE) {
 	    console.log("Tick!");
 	    broadcastMessage("Tick!");
+	    getHungry(world.players);
+	    sendStatus(world.players);
 	}
     }
 
-    function graze(player, goat) {
-	var resource = new (randomElement(world.resources));
-	player.socket.send(goat.name + " munches on some " + resource.name + ".");
+/* Events */
+    function getHungry(players) {
+	players.forEach(function(player) {
+	    player.goats.forEach(function(goat) {
+		goat.hunger = Math.min(goat.maxHunger, goat.hunger + (goat.maxHunger / 10));
+	    });
+	});
+    }
+    
+/* Resource Handling */
+    function addResource(player, resource, amount) {
+	if (!player.resources[resource]) {
+	    player.resources[resource] = 0;
+	}
+	player.resources[resource] += amount;
+	
+	return player.resources[resource];
     }
 
+    function removeResource(player, resource, amount) {
+	if (!player.resources[resource]) {
+	    return false;
+	} else {
+	    return player.resources[resource] -= amount;
+	}
+    }
+
+    function removeResources(player, resources) {
+	if (checkResources(player, resources)) {
+	    for (var name in resources) {
+		var amount = resources[name];
+		
+		player.resources[name] && (player.resources[name] -= amount);
+	    }	    
+	    return true;
+	}
+	return false;
+    }
+
+    function checkResources(player, resources) {
+	var enough = true;
+
+	for (var name in resources) {
+	    var amount = resources[name];
+
+	    if (!player.resources[name] || player.resources[name] < amount) {
+		enough = false;
+		break;
+	    }
+	}
+
+	return enough;
+
+    }
+    
+/* Action Handling */
+    function eat(goat, resource, amount) {
+	goat.hunger -= (resource.nourishment * (amount || 1)) / 100;
+	if (goat.hunger <= 0) {
+	    goat.hunger = 0;
+	}
+    }
+
+    function goat(player) {
+	var newGoat = new Goat();
+
+	if (removeResources(player, actions.goat.cost)) {
+	    player.goats.push(newGoat);
+	    sendMessage(player, "A new goat joins your herd!");
+	}
+    }
+    
+    function graze(player, goat) {
+	var resource = randomElement(world.resources);
+	var amount = Math.random() * resource.prominence * 4; // FIXME
+	var willEat = (Math.random() <= (((1 - goat.pickiness) + resource.desirability) * 0.65 +
+					 (goat.hunger / goat.maxHunger) * 0.35));
+	if (willEat) {
+	    sendMessage(player, goat.name + " munches on some " + resource.name + " (hunger now " + goat.hunger + "/" + goat.maxHunger + ".");
+	    eat(goat, resource, amount);
+	} else {
+	    var invAmount = addResource(player, resource.name, 1);
+	    sendMessage(player, goat.name + " returns with some " + resource.name + ". You now have " + invAmount + " " + resource.name + ".");
+	}
+    }
+
+    function attack(player, target) {
+	sendMessage(player, "You are attacking another player!");
+	sendMessage(target, "You are being attacked by another player's goats!");
+    }
+
+
+    function explore(player) {
+    }
+
+    function availableActions(player) {
+	var available = [];
+
+	for (var action in actions) {
+	    var prereq = actions[action].prereq;
+
+	    if (prereq == null ||
+		(prereq &&
+		 prereq.call(actions[action], player))) { // FIXME
+		available.push(action);
+	    }
+	}
+
+	return available;
+    }
+    
+/* User Output */
+    // Send a message to a player
+    function sendMessage(player, msg) {
+	var socket = player.socket;
+
+	socket.send(msg);
+    }
+
+    function sendJSON(player, object) {
+	var JSONified = JSON.stringify(object);
+
+	sendMessage(player, JSONified);
+    }
+
+    function goatStatus(player) {
+	var status = {};
+
+	player.goats.forEach(function(goat) {
+	    status[goat.name] = { hunger: goat.hunger / goat.maxHunger };
+	});
+
+	return status;
+    }
+
+    function playerStatus(player) {
+	var status = {};
+
+	status.goats = goatStatus(player);
+	status.resources = player.resources;
+	status.actions = availableActions(player);
+
+	return status;
+    }
+
+    function sendStatus(players) {
+	if (!players.forEach) {
+	    players = [players];
+	}
+
+	players.forEach(function(player) {
+	    var status = playerStatus(player);
+	    
+	    sendJSON(player, status);
+	});
+    }
+    
+/* Utilities */
     function randomElement(array) {
 	var index = Math.floor(Math.random() * array.length);
 	return array[index];
