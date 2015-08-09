@@ -2,17 +2,23 @@ var resources = (function() {
     var list = [
         /* Resources */
         {
+            name: "bunnies",
+            desirability: -25,
+            minExplored: 10,
+            displayName: { singular: "baby bunny",
+                           plural: "baby bunnies" },
+            nourishment: -25,
+            prominence: 0.00001
+        },{
             name: "knapweed",
             desirability: 0.67,
             minExplored: 0,
-            displayName: "knapweed",
             nourishment: 0.8,
             prominence: 0.8
         },{
             name: "kudzu",
             desirability: 0.68,
             minExplored: 0,
-            displayName: "kudzu",
             nourishment: 1,
             prominence: 0.8
         },{
@@ -22,7 +28,7 @@ var resources = (function() {
             displayName: { singular: "rock",
                            plural: "rocks" },
             nourishment: 0.01,
-            prominence: 0.35
+            prominence: 0.2
         },{
             name: "rubber",
             desirability: 0.21,
@@ -30,7 +36,7 @@ var resources = (function() {
             displayName: { singular: "bit of rubber",
                            plural: "bits of rubber" },
             nourishment: 0.1,
-            prominence: 0.15
+            prominence: 0.1
         },{
             name: "tin",
             desirability: 0.3,
@@ -46,7 +52,7 @@ var resources = (function() {
             displayName: { singular: "piece of wood",
                            plural: "pieces of wood" },
             nourishment: 0.2,
-            prominence: 0.4
+            prominence: 0.28
         }
     ];
 
