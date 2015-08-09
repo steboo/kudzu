@@ -1,5 +1,4 @@
-var ws = require('ws'),
-    quotes = require('./quotes');
+var ws = require('ws');
 
 var socketServer = function() {
     var data = null,
@@ -53,26 +52,6 @@ var socketServer = function() {
 
                 });  
             });      
-        },
-
-        getQuotes = function() {
-            var json = {"quotes" : quotes};
-
-            processJson(json);
-        },
-
-        sendQuote = function() {
-            if (listener.clients.length > 0) {
-                var randomQuoteIndex = Math.floor(Math.random() * data.quotes.length);
-                listener.broadcast(data.quotes[randomQuoteIndex]);
-            }
-        },
-
-        processJson = function(json) {
-            data = json;
-            sendQuote();
-            timerID = setInterval(sendQuote, 5000);
-
         },
 
         init = function(socketPort, callback) {
