@@ -80,8 +80,6 @@ var kudzu = (function() {
             listener.on('connection', function(socket) {
                 activateWorld();
 
-                listener.broadcast("Someone connected to the server!");
-
                 var player = addPlayer(world, socket);
 
                 if (player) {
@@ -275,7 +273,7 @@ var kudzu = (function() {
         var resName = resource.name;
 
         if (willEat) {
-            sendMessage(player, goat.name + " munches on some " + resName + " (hunger now " + goat.hunger + "/" + goat.maxHunger + ".");
+            sendMessage(player, goat.name + " munches on some " + resName + " (hunger now " + Math.round((goat.hunger / goat.maxHunger) * 100) + "%).");
             eat(goat, resource, amount);
         } else {
             var invAmount = addResource(player, resource, amount);
