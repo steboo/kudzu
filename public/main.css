@@ -21,12 +21,13 @@ body {
 
 .container .column.left,
 .container .column.right {
-	max-width: 150px;
+	max-width: 250px;
 }
 
 .column h3 {
 	font-family: Arial, sans-serif;
 	text-align: center;
+    font-size: 16px;
 }
 
 
