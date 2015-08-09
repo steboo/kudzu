@@ -328,11 +328,9 @@ var kudzu = (function() {
 	var available = [];
 
 	for (var action in actions) {
-	    var prereq = actions[action].prereq;
-
-	    if (prereq == null ||
-		(prereq &&
-		 prereq.call(actions[action], player))) { // FIXME
+	    if (actions[action].prereq == null ||
+		(actions[action].prereq &&
+		 actions[action].prereq(player))) {
 		available.push(action);
 	    }
 	}
