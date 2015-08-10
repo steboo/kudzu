@@ -38,6 +38,14 @@ var resources = (function() {
             nourishment: 1,
             prominence: 1
         },{
+            name: "paper",
+            desirability: 0.5,
+            displayName: { singular: "piece of paper",
+                           plural: "pieces of paper" },
+            minExplored: 50, // Might need later adjustment
+            nourishment: 0.2,
+            prominence: 0.1
+        },{
             name: "rocks",
             desirability: 0.02,
             displayName: { singular: "rock",

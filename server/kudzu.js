@@ -1,7 +1,9 @@
 var kudzu = (function() {
     var names = require('./names.js');
     var allResources = require('./resources.js');
+    var combat = require('./combat.js');
     var socketServer = require('./socketServer');
+    var utils = require('./utilities.js');
     var broadcastMessage,
         timer;
 
@@ -27,12 +29,15 @@ var kudzu = (function() {
     }
 
     function Goat() {
-        this.gender = (Math.random() > 0.5 ? "F" : "M");
+        this.gender = utils.randomElement(["M", "F"]);
         this.maxHunger = 0.5 + (Math.random() * 0.5);
+        this.hp = 100 * Math.min(this.level, 1);
         this.hunger = this.maxHunger / 2;
+        this.level = 0;
         this.name = names.pickName(this.gender);
         this.pickiness = 0.5 + (Math.random() * 0.5);
         this.wanderLust = 0; // For future use
+        this.xp = 0;
     };
 
     
@@ -58,7 +63,7 @@ var kudzu = (function() {
             },
             function(player) {
                 var cost = (typeof(this.cost) == "function" ? this.cost(player) : this.cost);
-                var enoughResources = checkResources(player, cost);
+                var enoughResources = utils.checkResources(player, cost);
 
                 return enoughResources;
             },
@@ -158,14 +163,14 @@ var kudzu = (function() {
     function randomPlayer(player, targetWorld) {
         targetWorld = targetWorld || player.world || world;
 
-        var playerList = targetWorld.players;
+        var playerList = targetWorld.players.slice();
         
         if (player) {
             playerIndex = playerList.indexOf(player);
             playerList.splice(playerIndex, 1);
         }
 
-        return randomElement(playerList);
+        return utils.randomElement(playerList);
     }
 
     // Look up a player by their socket
@@ -173,6 +178,7 @@ var kudzu = (function() {
         var socketPlayer = world.players.find(function(player) {
             return player.socket == socket;
         });
+
         return socketPlayer;
     }
 
@@ -197,55 +203,6 @@ var kudzu = (function() {
     }
 
     
-    /* Resource Handling */
-    function addResource(player, resource, amount) {
-        var name = resource.name;
-
-        if (!player.resources[name]) {
-            player.resources[name] = 0;
-        }
-        player.resources[name] += amount;
-        
-        return player.resources[name];
-    }
-
-    function removeResource(player, resource, amount) {
-        if (!player.resources[resource]) {
-            return false;
-        } else {
-            return player.resources[resource] -= amount;
-        }
-    }
-
-    function removeResources(player, resources) {
-        if (checkResources(player, resources)) {
-            for (var name in resources) {
-                var amount = resources[name];
-                
-                player.resources[name] && (player.resources[name] -= amount);
-            }        
-            return true;
-        }
-        return false;
-    }
-
-    function checkResources(player, resources) {
-        var enough = true;
-
-        for (var name in resources) {
-            var amount = resources[name];
-
-            if (!player.resources[name] || player.resources[name] < amount) {
-                enough = false;
-                break;
-            }
-        }
-
-        return enough;
-
-    }
-
-    
     /* Action Handling */
     function eat(goat, resource, amount) {
         goat.hunger -= (resource.nourishment * (amount || 1)) / 100;
@@ -258,26 +215,26 @@ var kudzu = (function() {
         var newGoat = new Goat();
         var cost = (typeof(actions.goat.cost) == "function" ? actions.goat.cost(player) : actions.goat.cost);
         
-        if (removeResources(player, cost)) {
+        if (utils.removeResources(player, cost)) {
             player.goats.push(newGoat);
-            sendMessage(player, "A new goat joins your herd!");
+            utils.sendMessage(player, "A new goat joins your herd!");
         }
     }
     
     function graze(player, goat) {
-//        var resource = randomElement(availableResources(player));
-        var resource = weightedRandom(availableResources(player));
+//        var resource = utils.randomElement(availableResources(player));
+        var resource = utils.weightedRandom(availableResources(player));
         var amount = 1;
         var willEat = (Math.random() <= (((1 - goat.pickiness) + resource.desirability) * 0.65 +
                                          (goat.hunger / goat.maxHunger) * 0.35));
         var resName = resource.name;
 
         if (willEat) {
-            sendMessage(player, goat.name + " munches on some " + resName + " (hunger now " + Math.round((goat.hunger / goat.maxHunger) * 100) + "%).");
+            utils.sendMessage(player, goat.name + " munches on some " + resName + " (hunger now " + Math.round((goat.hunger / goat.maxHunger) * 100) + "%).");
             eat(goat, resource, amount);
         } else {
-            var invAmount = addResource(player, resource, amount);
-            sendMessage(player, goat.name + " returns with some " + resName + ". You now have " + invAmount + " " +
+            var invAmount = utils.addResource(player, resource, amount);
+            utils.sendMessage(player, goat.name + " returns with some " + resName + ". You now have " + invAmount + " " +
                         (invAmount > 1 ?
                          ((resource.displayName && resource.displayName.plural) || resName) :
                          (resource.displayName && resource.displayName.singular) || resource.name) + ".");
@@ -288,8 +245,9 @@ var kudzu = (function() {
     }
 
     function attack(player, target) {
-        sendMessage(player, "You are attacking the herd of " + target.goats[0].name + " " + target.title + "!");
-        sendMessage(target, "You are being attacked by the herd of " + player.goats[0].name + " " + player.title + "!");
+        utils.sendMessage(player, "You are attacking the herd of " + target.goats[0].name + " " + target.title + "!");
+        utils.sendMessage(target, "You are being attacked by the herd of " + player.goats[0].name + " " + player.title + "!");
+        combat.handleRaid(player, target);
     }
 
 
@@ -322,21 +280,7 @@ var kudzu = (function() {
         return available;
     }
 
-    
-    /* User Output */
-    // Send a message to a player
-    function sendMessage(player, msg) {
-        var socket = player.socket;
-
-        socket.send(msg);
-    }
-
-    function sendJSON(player, object) {
-        var JSONified = JSON.stringify(object);
-
-        sendMessage(player, JSONified);
-    }
-
+    /* Status Messages */
     function goatStatus(player) {
         var status = [];
 
@@ -366,59 +310,11 @@ var kudzu = (function() {
         players.forEach(function(player) {
             var status = playerStatus(player);
             
-            sendJSON(player, status);
+            utils.sendJSON(player, status);
         });
     }
 
     
-    /* Utilities */
-    function weightedRandom(resources) {
-        var cumulativeWeight = 0,
-            random,
-            total = 0;
-
-        resources.forEach(function(resource) {
-            total += resource.prominence;
-        });
-
-        random = Math.random() * total;
-
-        for (var i=0; i<resources.length; i++) {
-            cumulativeWeight += resources[i].prominence;
-            if (random < cumulativeWeight) {
-                return resources[i];
-            }
-        }
-    }
-
-    function randomElement(array) {
-        var index = Math.floor(Math.random() * array.length);
-        return array[index];
-    }
-
-    if (!Array.prototype.find) {
-        Array.prototype.find = function(predicate) {
-            if (this === null) {
-                throw new TypeError('Array.prototype.find called on null or undefined');
-            }
-            if (typeof predicate !== 'function') {
-                throw new TypeError('predicate must be a function');
-            }
-            var list = Object(this);
-            var length = list.length >>> 0;
-            var thisArg = arguments[1];
-            var value;
-            
-            for (var i = 0; i < length; i++) {
-                value = list[i];
-                if (predicate.call(thisArg, value, i, list)) {
-                    return value;
-                }
-            }
-            return undefined;
-        };
-    }
-
     return {
         addPlayer: addPlayer,
         initWorld: initWorld
