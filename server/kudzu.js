@@ -163,11 +163,10 @@ var kudzu = (function() {
     function randomPlayer(player, targetWorld) {
         targetWorld = targetWorld || player.world || world;
 
-        var playerList = targetWorld.players.slice();
-        
         if (player) {
-            playerIndex = playerList.indexOf(player);
-            playerList.splice(playerIndex, 1);
+            var playerList = targetWorld.players.filter(function(p) {
+                return p != player;
+            });
         }
 
         return utils.randomElement(playerList);
