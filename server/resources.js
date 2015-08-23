@@ -1,4 +1,6 @@
 var resources = (function() {
+    var utils = require('./utilities.js');
+    
     var list = [
         /* Resources */
         {
@@ -38,12 +40,23 @@ var resources = (function() {
             nourishment: 1,
             prominence: 1
         },{
+            name: "leather",
+            desirability: 0,
+            minExplored: 0,
+            nourishment: 0,
+            prominence: 0 // Does not occur naturally
+        },{
             name: "paper",
             desirability: 0.5,
             displayName: { singular: "piece of paper",
                            plural: "pieces of paper" },
-            minExplored: 50, // Might need later adjustment
+            minExplored: 15, // Might need later adjustment
             nourishment: 0.2,
+            onEaten: function(goat) {
+                var smarts = Math.floor(Math.random() * 5);
+                goat.smarts += smarts;
+                utils.sendMessage(goat.player, goat.name + " gains " + smarts + " smarts.");
+            },
             prominence: 0.1
         },{
             name: "rocks",
