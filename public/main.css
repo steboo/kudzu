@@ -86,3 +86,23 @@ p.policy {
 .stats {
 	margin-left: 1em;
 }
+
+.tab {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0 0 0 0;
+    text-decoration: underline red;
+}
+
+.tabs span:before {
+    content: " | ";
+}
+
+.tabs span:first-child:before {
+    content: "";
+}
+
+.tab.selected {
+    text-decoration: none;
+}

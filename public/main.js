@@ -1,6 +1,6 @@
 (function () {
     var ws,
-        wsUri = 'ws://localhost:9001/';
+        wsUri = 'ws://localhost:9000/';
 
     function logDebug(message) {
         if ('console' in window) {
@@ -30,6 +30,11 @@
                 console.log(message);
             }
         }
+    }
+
+    function getSelectedTab() {
+        var selected = $('.tab.selected').text();
+        return selected;
     }
 
     // todo: drop jquery
@@ -113,6 +118,42 @@
         }
     }
 
+    function updateTabs(tabs) {
+        var selected = getSelectedTab();
+        var $tabs = $('.tabs').empty();
+
+        for (var tab in tabs) {
+            var $span = $('<span/>');
+            var $tab = $('<button></button>').addClass('tab').attr('data-actions', JSON.stringify(tabs[tab].actions));
+
+            if ((tab == selected) ||
+                !selected) {
+                $tab.addClass('selected');
+                selected = tab;
+                updateActions(tabs[tab].actions);
+            }
+            
+            $tab.text(tab).appendTo($span);
+            $span.appendTo($tabs);
+
+            $tab.on('click', function(e) {
+                var allTabs = document.getElementsByClassName('tab');
+
+                for (var toggleTab of allTabs) {
+                    if (toggleTab == e.target) {
+                        toggleTab.classList.add('selected');
+                    } else {
+                        toggleTab.classList.remove('selected');
+                    }
+                };
+
+                var actions = JSON.parse(e.target.getAttribute('data-actions'));
+                updateActions(actions);
+            });
+        }
+    
+    }
+
     function wsInit(wsUri) {
         ws = new WebSocket(wsUri);
         ws.onopen = function (e) {
@@ -164,9 +205,10 @@
                     updateResources(data.resources);
                 }
 
-                if (data.actions) {
-                    updateActions(data.actions);
+                if (data.tabs) {
+                    updateTabs(data.tabs);
                 }
+                
                 /*$('.output')
                     .append($('<p></p>')
                         .addClass('debug')
@@ -194,8 +236,12 @@
         });
 
         $('form.actions').on('click', 'button.action', function (e) {
+            var stanza = {
+                action: e.target.getAttribute('data-action'),
+                tab: getSelectedTab()
+            };
             e.preventDefault();
-            ws.send(e.target.getAttribute('data-action'));
+            ws.send(JSON.stringify(stanza));
         });
     }
 
