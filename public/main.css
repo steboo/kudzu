@@ -92,7 +92,7 @@ p.policy {
     border: none;
     cursor: pointer;
     padding: 0 0 0 0;
-    text-decoration: underline red;
+    text-decoration: underline;
 }
 
 .tabs span:before {
