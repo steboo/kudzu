@@ -53,7 +53,7 @@ var resources = (function() {
             minExplored: 15, // Might need later adjustment
             nourishment: 0.2,
             onEaten: function(goat) {
-                var smarts = Math.floor(Math.random() * 5);
+                var smarts = 1 + Math.floor(Math.random() * 5);
                 goat.smarts += smarts;
                 utils.sendMessage(goat.player, goat.name + " gains " + smarts + " smarts.");
             },

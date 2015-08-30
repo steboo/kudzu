@@ -28,6 +28,7 @@ var kudzu = (function() {
         this.objects = {};
         this.resources = {};
         this.socket = socket;
+        this.techs = [];
         this.title = "the new kid"; // Maybe each goat should get a title
         this.world = null;
     }
@@ -76,14 +77,15 @@ var kudzu = (function() {
             goat)
             
     };
-    
+
+
     /* Tabs */
     var tabs = {
         basic: { actions: basicActions },
         crafting: { actions: items.all, prereq: items.prereq },
         exploration: { actions: { "attack": {} } },
-//        management: { actions: jobs.all }, // FIXME
-        research: { actions: tech.all }
+        management: { actions: jobs.all, prereq: jobs.prereq, template: "per_goat" }, // FIXME
+        research: { actions: tech.all, effect: tech.effect, prereq: tech.prereq }
     };
 
 
@@ -115,24 +117,28 @@ var kudzu = (function() {
 
                 socket.on('message', function(data) {
                     var action,
-                        command;
+                        command,
+                        goat;
                     var player = getPlayerBySocket(socket);
 
                     try { 
                         command = JSON.parse(data);
                         action = command.action;
+                        goat = command.goat;
                     } catch(e) {
                         utils.sendMessage(player, "Invalid input!");
                         return;
                     }
 
-//                    socket.send("Doing this: " + command.tab + "." + action);
-
                     if (command.tab &&
                         action &&
                         tabs[command.tab] &&
-                        (tabs[command.tab].actions[action].prereq ? tabs[command.tab].actions[action].prereq(player) : true)) {
-                        tabs[command.tab].actions[action].effect(player);
+                        (tabs[command.tab].actions[action].prereq ? tabs[command.tab].actions[action].prereq(player, goat) : true)) {
+                        if (tabs[command.tab].effect) {
+                            tabs[command.tab].effect(player, action, goat);
+                        } else {
+                            tabs[command.tab].actions[action].effect(player, goat);
+                        }
                     } else if (data == "attack") {
                         var target = randomPlayer(player);
                         attack(player, target);
@@ -256,7 +262,6 @@ var kudzu = (function() {
     }
     
     function graze(player, goat) {
-//        var resource = utils.randomElement(availableResources(player));
         var resource = utils.weightedRandom(availableResources(player));
         var amount = 1;
         var willEat = (Math.random() <= (((1 - goat.pickiness) + resource.desirability) * 0.65 +
@@ -292,12 +297,8 @@ var kudzu = (function() {
         var available = [];
 
         for (var action in actions) {
-            if ((pred == null &&
-                 actions[action].prereq == null) ||
-                (pred &&
-                 pred(player, actions[action])) ||
-                (actions[action].prereq &&
-                 actions[action].prereq(player))) {
+            if ((pred == null || pred(player, action)) &&
+                (actions[action].prereq == null || (actions[action].prereq(player)))) {
                 available.push(action);
             }
         }
@@ -337,6 +338,7 @@ var kudzu = (function() {
         status.goats = goatStatus(player);
         status.objects = player.objects;
         status.resources = player.resources;
+        status.technologies = player.techs;
         status.tabs = tabStatus(player);
 
         return status;
@@ -350,7 +352,10 @@ var kudzu = (function() {
 
             if (actions &&
                 actions.length > 0) {
-                available[tab] = actions;
+                available[tab] = { actions: actions };
+                if (tabs[tab].template) {
+                    available[tab].template = tabs[tab].template;
+                }
             }
         }
 

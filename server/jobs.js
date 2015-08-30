@@ -1,17 +1,21 @@
 var jobs = (function() {
-    var list = [
+    var all = {
         /* Jobs */
-        {
-            name: "Manager"
-        },{
-            name: "Number Cruncher"
-        },{
-            name: "Soldier"
+        "Manager": {
+        },
+        "Number Cruncher": {
+        },
+        "Soldier": {
         }
-    ];
+    };
+
+    function prereq(player, job) {
+        return player.techs.indexOf("Management") >= 0;
+    }
 
     return {
-        list: list
+        all: all,
+        prereq: prereq
     };
 })();
 
