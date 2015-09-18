@@ -143,6 +143,8 @@ var kudzu = (function() {
                         var target = randomPlayer(player);
                         attack(player, target);
                     }
+
+                    sendStatus(player);
                 });
 
                 socket.on('close', function() {

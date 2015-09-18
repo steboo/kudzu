@@ -95,6 +95,9 @@ p.policy {
     text-decoration: underline;
 }
 
+.tabs {
+    margin-bottom: 0.5em;
+
 .tabs span:before {
     content: " | ";
 }

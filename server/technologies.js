@@ -6,10 +6,20 @@ var technologies = (function() {
         "Billy Club": {
             // Unused
         },
+
         "Management": {
             cost: { "knapweed": 25 },
             minSmarts: 10
         },
+
+        "Sharpened Hooves": {
+            minSmarts: 25,
+            prereq: function(player) {
+                var resources = { rocks: 15 };
+                return utils.checkResources(player, resources);
+            }
+        },
+
         "Weaving": {
             minSmarts: 5
         }

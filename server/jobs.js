@@ -13,6 +13,15 @@ var jobs = (function() {
         return player.techs.indexOf("Management") >= 0;
     }
 
+    function effect(player, job, goatName) {
+        var goat = player.goats.find(function(g) {
+            if (g.name == goatName) {
+                return g;
+            }
+        });
+        goat.job = job;
+    }
+
     return {
         all: all,
         prereq: prereq
