@@ -7,9 +7,23 @@ var technologies = (function() {
             // Unused
         },
 
+        "Idleness": {
+            cost: { "knapweed": 5,
+                    "kudzu": 5 },
+            effect: function(player) {
+                player.goats.forEach(function(goat) {
+                    goat.job = "Idler";
+                });
+            },
+            minSmarts: 0
+        },
+
         "Management": {
             cost: { "knapweed": 25 },
-            minSmarts: 10
+            minSmarts: 10,
+            prereq: function(player) {
+                return hasTech(player, "Idleness");
+            }
         },
 
         "Sharpened Hooves": {
@@ -30,6 +44,11 @@ var technologies = (function() {
 
         utils.removeResources(player, tech.cost);
         player.techs.push(techName); // FIXME
+        tech.effect && tech.effect(player);
+    }
+
+    function hasTech(player, techName) {
+        return player.techs.indexOf(techName) >= 0;
     }
 
     function prereq(player, techName) {
@@ -38,7 +57,7 @@ var technologies = (function() {
         });
         var tech = allTechs[techName];
 
-        if ((player.techs.indexOf(techName) < 0) &&
+        if (!hasTech(player, techName) &&
             utils.checkResources(player, tech.cost) &&
             goat.smarts >= tech.minSmarts &&
             (tech.prereq == null ||
@@ -52,6 +71,7 @@ var technologies = (function() {
     return {
         all: allTechs,
         effect: effect,
+        hasTech: hasTech,
         prereq: prereq
     };
 })();

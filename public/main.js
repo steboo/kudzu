@@ -1,6 +1,7 @@
 (function () {
     var ws,
         wsUri = 'ws://localhost:9000/';
+    var goats;
 
     function logDebug(message) {
         if ('console' in window) {
@@ -44,7 +45,7 @@
 
     function updateStats(goats) {
         var $goatsSection = $('.goats').empty(),
-            $goatsList;
+            $goatList;
 
         if (Array.isArray(goats) && (goats.length > 0 || goatsFound)) { // down with old browsers
             goatsFound = true;
@@ -107,14 +108,38 @@
         }
     }
 
-    function updateActions(actions) {
+    function updateActions(actions, template) {
         var $actions = $('.actions').empty();
 
         if (Array.isArray(actions)) {
-            actions.forEach(function(action) {
-                var $action = $('<button></button>').addClass('action').attr('data-action', action);
-                $action.text(action).appendTo($actions);
-            });
+            if (!template) {
+                actions.forEach(function(action) {
+                    var $action = $('<button></button>')
+                            .addClass('action')
+                            .attr('data-action', action);
+                    $action.text(action).appendTo($actions);
+                });
+            } else if (template == "per_goat") {
+                if (goats && goats.length > 0) {
+                    goats.forEach(function(goat) {
+                        var $div = $('<div/>').addClass('goat-actions'),
+                            $label = $('<label/>').attr('for', goat.name),
+                            $select = $('<select/>').addClass('action')
+                                .attr('id', goat.name);
+
+                        actions.forEach(function(action) {
+                            var $option = $('<option/>').attr('value', action);
+                            if (action == goat.job) {
+                                $option.attr('selected', true);
+                            }
+                            $option.text(action).appendTo($select);
+                        });
+                        $label.text(goat.name).appendTo($div);
+                        $select.appendTo($div);
+                        $div.appendTo($actions);
+                    });
+                }
+            }
         }
     }
 
@@ -124,13 +149,15 @@
 
         for (var tab in tabs) {
             var $span = $('<span/>');
-            var $tab = $('<button></button>').addClass('tab').attr('data-actions', JSON.stringify(tabs[tab].actions));
+            var $tab = $('<button></button>').addClass('tab')
+                    .attr('data-actions', JSON.stringify(tabs[tab].actions))
+                    .attr('data-template', JSON.stringify(tabs[tab].template));
 
             if ((tab == selected) ||
                 !selected) {
                 $tab.addClass('selected');
                 selected = tab;
-                updateActions(tabs[tab].actions);
+                updateActions(tabs[tab].actions, tabs[tab].template);
             }
             
             $tab.text(tab).appendTo($span);
@@ -148,9 +175,16 @@
                 };
 
                 var actions = JSON.parse(e.target.getAttribute('data-actions'));
-                updateActions(actions);
+                var template = JSON.parse(e.target.getAttribute('data-template'));
+
+                updateActions(actions, template);
             });
         }
+
+/*        if (!getSelectedTab()) { // We don't use selected here because we need to check again
+            var $first = $('.tabs :first-child');
+            $first.click();
+        }*/ // Doesn't work yet -- currently selects the /last/ tab instead of the first
     
     }
 
@@ -198,6 +232,7 @@
 
             if (data) {
                 if (data.goats) {
+                    goats = data.goats;
                     updateStats(data.goats);
                 }
 
@@ -241,6 +276,15 @@
                 tab: getSelectedTab()
             };
             e.preventDefault();
+            ws.send(JSON.stringify(stanza));
+        });
+
+        $('form.actions').on('change', 'select.action', function (e) {
+            var stanza = {
+                goat: e.target.id,
+                action: e.target.options[e.target.selectedIndex].value,
+                tab: getSelectedTab()
+            };
             ws.send(JSON.stringify(stanza));
         });
     }

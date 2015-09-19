@@ -11,6 +11,18 @@ var utilities = (function() {
         return player.resources[name];
     }
 
+    function availableResources(player) {
+        var available = [];
+
+        player.world.resources.forEach(function(resource) {
+            if (player.explored >= resource.minExplored) {
+                available.push(resource);
+            }
+        });
+
+        return available;
+    }
+
     function checkResources(player, resources) {
         var enough = true;
 
@@ -113,6 +125,7 @@ var utilities = (function() {
 
     return {
         addResource: addResource,
+        availableResources: availableResources,
         checkResources: checkResources,
         removeResource: removeResource,
         removeResources: removeResources,
