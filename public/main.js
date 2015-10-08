@@ -165,8 +165,8 @@
 
             $tab.on('click', function(e) {
                 var allTabs = document.getElementsByClassName('tab');
-
-                for (var toggleTab of allTabs) {
+                for (var i = 0; i < allTabs.length; i++) {
+                    var toggleTab = allTabs[i];
                     if (toggleTab == e.target) {
                         toggleTab.classList.add('selected');
                     } else {
