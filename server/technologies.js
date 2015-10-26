@@ -3,30 +3,30 @@ var technologies = (function() {
 
     var allTechs = {
         /* Technologies */
-        "Billy Club": {
+        'Billy Club': {
             // Unused
         },
 
-        "Idleness": {
-            cost: { "knapweed": 5,
-                    "kudzu": 5 },
+        'Idleness': {
+            cost: { 'knapweed': 5,
+                    'kudzu': 5 },
             effect: function(player) {
                 player.goats.forEach(function(goat) {
-                    goat.job = "Idler";
+                    goat.job = 'Idler';
                 });
             },
             minSmarts: 0
         },
 
-        "Management": {
-            cost: { "knapweed": 25 },
+        'Management': {
+            cost: { 'knapweed': 25 },
             minSmarts: 10,
             prereq: function(player) {
-                return hasTech(player, "Idleness");
+                return hasTech(player, 'Idleness');
             }
         },
 
-        "Sharpened Hooves": {
+        'Sharpened Hooves': {
             minSmarts: 25,
             prereq: function(player) {
                 var resources = { rocks: 15 };
@@ -34,7 +34,7 @@ var technologies = (function() {
             }
         },
 
-        "Weaving": {
+        'Weaving': {
             minSmarts: 5
         }
     };
