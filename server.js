@@ -1,8 +1,9 @@
 var express = require('express'),
+    config = require('./server/config'),
     kudzu = require('./server/kudzu');
 
-var httpPort = 8000,
-    wsPort = 9000;
+var httpPort = config.httpServer.port,
+    wsPort = config.wsServer.port;
 
 if (process.argv.length >= 3 && process.argv.length <= 4) {
     httpPort = Number(process.argv[2]);

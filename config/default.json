@@ -1,0 +1,8 @@
+{
+    "httpServer": {
+        "port": 8000
+    },
+    "wsServer": {
+        "port": 9000
+    }
+}
