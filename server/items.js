@@ -8,10 +8,10 @@ var items = (function() {
             description: "Goats can carry food",
             effect: function(player) {
                 utils.removeResources(player, this.cost);
-                if (!player.objects.knapsack) {
-                    player.objects.knapsack = 0;
+                if (!player.items.knapsack) {
+                    player.items.knapsack = 0;
                 }
-                player.objects.knapsack += 1;
+                player.items.knapsack += 1;
             },
             prereq: function(player) {
                 return player.techs.indexOf("Weaving") >= 0;

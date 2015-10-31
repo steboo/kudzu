@@ -1,8 +1,8 @@
 var kudzu = (function() {
-    var names = require('./names.js');
     var allResources = require('./resources.js');
     var basic = require('./basic.js');
     var combat = require('./combat.js');
+    var equipment = require('./equipment.js');
     var items = require('./items.js');
     var jobs = require('./jobs.js');
     var socketServer = require('./socketServer');
@@ -27,7 +27,7 @@ var kudzu = (function() {
         this.clicks = 0;
         this.explored = 0;
         this.goats = [new basic.Goat(this)];
-        this.objects = {};
+        this.items = {};
         this.resources = {};
         this.socket = socket;
         this.techs = [];
@@ -39,9 +39,11 @@ var kudzu = (function() {
     var tabs = {
         basic: { actions: basic.all, effect: basic.effect, prereq: basic.prereq },
         crafting: { actions: items.all, prereq: items.prereq },
+        equipment: { actions: equipment.all, effect: equipment.effect, prereq: equipment.prereq, template: "per_goat" },
         exploration: { actions: { "attack": {} } },
         management: { actions: jobs.all, effect: jobs.effect, prereq: jobs.prereq, template: "per_goat" }, // FIXME
         research: { actions: tech.all, effect: tech.effect, prereq: tech.prereq }
+//        upgrades: { actions: null, effect: null, prereq: null, template: ["per_goat"] }
     };
 
 
@@ -91,9 +93,9 @@ var kudzu = (function() {
                         tabs[command.tab] &&
                         (tabs[command.tab].actions[action].prereq ? tabs[command.tab].actions[action].prereq(player, goat) : true)) {
                         if (tabs[command.tab].effect) {
-                            tabs[command.tab].effect(player, action, goat);
+                            tabs[command.tab].effect(player, action, goat, command);
                         } else {
-                            tabs[command.tab].actions[action].effect(player, goat);
+                            tabs[command.tab].actions[action].effect(player, goat, command);
                         }
                     } else if (data == "attack") {
                         var target = randomPlayer(player);
@@ -228,6 +230,7 @@ var kudzu = (function() {
         player.goats.forEach(function(goat) {
             status.push({ name: goat.name,
                           hunger: goat.hunger / goat.maxHunger,
+                          items: goat.items,
                           job: goat.job,
                           smarts: goat.smarts
                         });
@@ -240,7 +243,7 @@ var kudzu = (function() {
         var status = {};
 
         status.goats = goatStatus(player);
-        status.objects = player.objects;
+        status.items = player.items;
         status.resources = player.resources;
         status.technologies = player.techs;
         status.tabs = tabStatus(player);
@@ -256,7 +259,12 @@ var kudzu = (function() {
 
             if (actions &&
                 actions.length > 0) {
+                if (tab == "equipment") {
+                    actions = player.items;
+                }
+
                 available[tab] = { actions: actions };
+
                 if (tabs[tab].template) {
                     available[tab].template = tabs[tab].template;
                 }

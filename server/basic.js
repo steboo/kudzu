@@ -5,6 +5,11 @@ var basic = (function() {
 
     var all = {
         /* Basic Actions */
+        cheat: {
+            cost: null,
+            prereq: null,
+            effect: cheat
+        },
         graze: {
             cost: null,
             prereq: null,
@@ -26,9 +31,10 @@ var basic = (function() {
     };
 
     function Goat(player) {
+        this.items = { saddle: 2 };
         this.gender = utils.randomElement(["M", "F"]);
-        this.maxHunger = 0.5 + (Math.random() * 0.5);
         this.hp = 100 * Math.min(this.level, 1);
+        this.maxHunger = 0.5 + (Math.random() * 0.5);
         this.hunger = this.maxHunger / 2;
         this.level = 0;
         this.name = names.pickName(this.gender);
@@ -57,6 +63,17 @@ var basic = (function() {
     }
 
     /* Action Handling */
+    function cheat(player) {
+        player.resources.knapweed = player.resources.knapweed || 0;
+        player.resources.knapweed += 1000;
+        player.resources.kudzu = player.resources.kudzu || 0;
+        player.resources.kudzu += 1000;
+
+        player.goats.forEach(function(goat) {
+            goat.smarts += 100;
+        });
+    }
+
     function eat(goat, resource, amount) {
         goat.hunger -= (resource.nourishment * (amount || 1)) / 100;
         if (goat.hunger <= 0) {

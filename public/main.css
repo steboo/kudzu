@@ -1,5 +1,83 @@
-body {
+.actions.equipment {
+    flex: 1 1 10px;
+    overflow: auto;
+}
+
+.actions.equipment > div {
+    display: flex;
+    flex: 1 1;
+}
+
+.actions.equipment .item {
+    background-color: aliceblue;
+    border-color: #989898;
+    border-radius: 3px;
+    border-style: solid;
+    border-width: 1px;
+    cursor: move;
+    display: inline-block;
+    margin: 0.35em;
+    padding: 3px 5px;
+}
+
+.actions.equipment .item.dragging {
+    border-color: grey;
+    border-style: dashed;
+    border-width: 2px;
+    opacity: 0.5;
+}
+
+.actions.equipment .items {
+    background-color: lightgrey;
+    border-radius: 5px;
+    display: inline-block;
+    margin: 0.35em;
+}
+
+.actions.equipment .items:empty {
+    color: #989898;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actions.equipment .items:empty::before {
+    content: "Drag an item here to equip it.";
+}
+
+.actions.equipment .items.available {
+    flex: 1 1 0%;
+    min-height: 100px;
+}
+
+.actions.equipment .items.available:empty::before {
+    content: "Drag an item here to unequip it.";
+}
+
+.actions.equipment .goat {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+}
+
+.actions.equipment .goat .items {
+    flex: 1 1 100%;
+    min-height: 100px;
+}
+
+.actions.equipment .goat > span {
+    flex: 1 1 30%;
+}
+
+.actions.equipment .goats {
+    flex: 1 1 45%;
+}
+
+body,
+html {
     font-family: Arial, sans-serif;
+    height: 100%;
+    margin: 0;
 }
 
 .container {
@@ -8,6 +86,7 @@ body {
     display: -ms-flexbox;      /* TWEENER - IE 10 */
     display: -webkit-flex;     /* NEW - Chrome */
     display: flex;             /* NEW, Spec - Opera 12.1, Firefox 20+ */
+    height: 100%;
 }
 
 .container .column {
@@ -16,6 +95,12 @@ body {
     -webkit-flex: 1;          /* Chrome */
     -ms-flex: 1;              /* IE 10 */
     flex: 1;                  /* NEW, Spec - Opera 12.1, Firefox 20+ */
+}
+
+.container .column.center {
+    display: flex;
+    flex-direction: column;
+    margin-right: 0.35em;
 }
 
 .container .column.left,
@@ -38,7 +123,6 @@ body {
 
 .connection {
     height: 0.5em;
-    margin-right: 1em;
 }
 
 .connection.online {
@@ -54,9 +138,9 @@ body {
 }
 
 .output {
-    border: 1px solid #444;
-    height: 250px; /* TODO, be more responsive */
+    min-height: 75px; /* TODO, be more responsive */
     margin-top: 0;
+    max-height: 85%;
     min-width: 1em;
     overflow: auto;
     padding: 0 0.2em;
@@ -65,6 +149,14 @@ body {
 .output p {
     margin: 0;
     padding: 0;
+}
+
+.output p span.counter::before {
+    content: " (x";
+}
+
+.output p span.counter::after {
+    content: ")";
 }
 
 .output p.debug {

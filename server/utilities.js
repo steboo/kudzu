@@ -60,6 +60,17 @@ var utilities = (function() {
     }
 
 
+    /* Misc */
+    function findGoat(player, goatName) {
+        var goat = player.goats.find(function(g) {
+            if (g.name == goatName) {
+                return g;
+            }
+        });
+
+        return goat;
+    }
+
     /* User Output */
     // Send a message to a player
     function sendMessage(player, msg) {
@@ -127,6 +138,7 @@ var utilities = (function() {
         addResource: addResource,
         availableResources: availableResources,
         checkResources: checkResources,
+        findGoat: findGoat,
         removeResource: removeResource,
         removeResources: removeResources,
         randomElement: randomElement,
