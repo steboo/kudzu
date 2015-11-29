@@ -71,6 +71,10 @@ var utilities = (function() {
         return goat;
     }
 
+    function hasTech(player, techName) {
+        return player.techs.indexOf(techName) >= 0;
+    }
+
     /* User Output */
     // Send a message to a player
     function sendMessage(player, msg) {
@@ -139,6 +143,7 @@ var utilities = (function() {
         availableResources: availableResources,
         checkResources: checkResources,
         findGoat: findGoat,
+        hasTech: hasTech,
         removeResource: removeResource,
         removeResources: removeResources,
         randomElement: randomElement,

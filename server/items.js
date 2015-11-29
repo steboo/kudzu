@@ -3,9 +3,24 @@ var items = (function() {
 
     var all = {
         /* (Craftable) Items */
+        'hoof spikes': {
+            cost: {
+                rocks: 5,
+                wood: 5
+            },
+            description: 'Hooves do more damage',
+            effect: function(player) {
+                // TODO: Something something hooves do more damage when fighting
+                return true || player;
+            },
+            prereq: function(player) {
+                utils.hasTech(player, 'Sharpened Hooves');
+            }
+        },
+
         knapsack: {
             cost: { knapweed: 50 },
-            description: "Goats can carry food",
+            description: 'Goats can carry food',
             effect: function(player) {
                 utils.removeResources(player, this.cost);
                 if (!player.items.knapsack) {
@@ -14,7 +29,7 @@ var items = (function() {
                 player.items.knapsack += 1;
             },
             prereq: function(player) {
-                return player.techs.indexOf("Weaving") >= 0;
+                return utils.hasTech(player, 'Weaving') >= 0;
             }
         }
     };

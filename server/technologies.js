@@ -14,7 +14,7 @@ var technologies = (function() {
             },
             minSmarts: 5,
             prereq: function(player) {
-                return hasTech(player, 'Idleness');
+                return utils.hasTech(player, 'Idleness');
             }
         }, // TODO: need cost, minsmarts
 
@@ -22,7 +22,7 @@ var technologies = (function() {
             cost: {},
             minSmarts: 15,
             prereq: function(player) {
-                return !hasTech(player, 'Billy Club');
+                return !utils.hasTech(player, 'Billy Club');
             }
         }, // TODO: no effect yet
 
@@ -30,13 +30,13 @@ var technologies = (function() {
             cost: {},
             minSmarts: 100,
             prereq: function(player) {
-                return hasTech(player, 'Mathematics');
+                return utils.hasTech(player, 'Mathematics');
             }
         }, // TODO: no effect yet
 
         'Friendship': {
             prereq: function(player) {
-                return hasTech(player, 'Love');
+                return utils.hasTech(player, 'Love');
             }
         }, // TODO: no effect yet
 
@@ -62,7 +62,7 @@ var technologies = (function() {
             cost: { 'knapweed': 25 },
             minSmarts: 10,
             prereq: function(player) {
-                return hasTech(player, 'Idleness');
+                return utils.hasTech(player, 'Idleness');
             }
         },
 
@@ -76,8 +76,8 @@ var technologies = (function() {
 
         'Peace': {
             prereq: function(player) {
-                return hasTech(player, 'War') &&
-                       hasTech(player, 'Friendship');
+                return utils.hasTech(player, 'War') &&
+                       utils.hasTech(player, 'Friendship');
             }
         }, // TODO: no effect yet
 
@@ -85,7 +85,7 @@ var technologies = (function() {
             cost: {},
             minSmarts: 150,
             prereq: function(player) {
-                return hasTech(player, 'Pride');
+                return utils.hasTech(player, 'Pride');
             }
         }, // TODO: no effect yet
 
@@ -96,7 +96,7 @@ var technologies = (function() {
             cost: {},
             minSmarts: 25,
             prereq: function(player) {
-                return hasTech(player, 'Crime');
+                return utils.hasTech(player, 'Crime');
             }
         }, // TODO: no effect yet
 
@@ -113,15 +113,16 @@ var technologies = (function() {
             cost: {},
             minSmarts: 130,
             prereq: function(player) {
-                return hasTech(player, 'Sense');
+                return utils.hasTech(player, 'Sense');
             }
         }, // TODO: no effect yet
 
         'Sharpened Hooves': {
+            cost: { rocks: 25 },
             minSmarts: 25,
             prereq: function(player) {
                 var resources = { rocks: 15 };
-                return hasTech(player, 'Weaponry') &&
+                return utils.hasTech(player, 'Weaponry') &&
                        utils.checkResources(player, resources);
             }
         },
@@ -130,7 +131,7 @@ var technologies = (function() {
             cost: {},
             minSmarts: 20,
             prereq: function(player) {
-                return hasTech(player, 'Woodworking');
+                return utils.hasTech(player, 'Woodgnawing');
             }
         }, // TODO: no effect yet
 
@@ -138,7 +139,7 @@ var technologies = (function() {
             cost: {},
             minSmarts: 25,
             prereq: function(player) {
-                return hasTech(player, 'Mathematics');
+                return utils.hasTech(player, 'Mathematics');
             }
         }, // TODO: no effect yet
 
@@ -155,23 +156,23 @@ var technologies = (function() {
             cost: {},
             minSmarts: 25,
             prereq: function(player) {
-                return hasTech(player, 'Tools') &&
-                       hasTech(player, 'War');
+                return utils.hasTech(player, 'Tools') &&
+                       utils.hasTech(player, 'War');
             }
         }, // TODO: no effect yet
 
         'Weaving': {
             minSmarts: 5,
             prereq: function(player) {
-                return hasTech(player, 'Craftsgoatship');
+                return utils.hasTech(player, 'Craftsgoatship');
             }
         },
 
-        'Woodworking': {
+        'Woodgnawing': {
             cost: {},
             minSmarts: 18,
             prereq: function(player) {
-                return hasTech(player, 'Craftsgoatship');
+                return utils.hasTech(player, 'Craftsgoatship');
             }
         } // TODO: no effect yet
     };
@@ -184,17 +185,13 @@ var technologies = (function() {
         tech.effect && tech.effect(player);
     }
 
-    function hasTech(player, techName) {
-        return player.techs.indexOf(techName) >= 0;
-    }
-
     function prereq(player, techName) {
         var goat = player.goats.reduce(function(goat1, goat2) {
             return (goat1.smarts > goat2.smarts ? goat1 : goat2);
         });
         var tech = allTechs[techName];
 
-        if (!hasTech(player, techName) &&
+        if (!utils.hasTech(player, techName) &&
             utils.checkResources(player, tech.cost) &&
             goat.smarts >= tech.minSmarts &&
             (tech.prereq == null ||
@@ -208,7 +205,6 @@ var technologies = (function() {
     return {
         all: allTechs,
         effect: effect,
-        hasTech: hasTech,
         prereq: prereq
     };
 })();
