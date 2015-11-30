@@ -1,7 +1,6 @@
 var basic = (function() {
     var names = require('./names.js'),
-        utils = require('./utilities.js'),
-        tech = require('./technologies.js');
+        utils = require('./utilities.js');
 
     var all = {
         /* Basic Actions */
@@ -24,7 +23,7 @@ var basic = (function() {
         goat: {
             cost: function(player) {
                 var goats = player.goats.length;
-                return { "kudzu": Math.floor(1.5 * Math.pow((goats + 2), 2)) + 2 };
+                return { 'kudzu': Math.floor(1.5 * Math.pow((goats + 2), 2)) + 2 };
             },
             effect: goat
         }
@@ -32,7 +31,7 @@ var basic = (function() {
 
     function Goat(player) {
         this.items = { saddle: 2 };
-        this.gender = utils.randomElement(["M", "F"]);
+        this.gender = utils.randomElement(['M', 'F']);
         this.hp = 100 * Math.min(this.level, 1);
         this.maxHunger = 0.5 + (Math.random() * 0.5);
         this.hunger = this.maxHunger / 2;
@@ -47,7 +46,7 @@ var basic = (function() {
 
     function effect(player, actionName) {
         var action = all[actionName];
-        var cost = (typeof(action.cost) == "function" ? action.cost(player) : action.cost);
+        var cost = (typeof(action.cost) == 'function' ? action.cost(player) : action.cost);
 
         if (utils.removeResources(player, cost)) {
             action.effect && action.effect(player);
@@ -56,7 +55,7 @@ var basic = (function() {
     
     function prereq(player, actionName) {
         var action = all[actionName];
-        var cost = (typeof(action.cost) == "function" ? action.cost(player) : action.cost);
+        var cost = (typeof(action.cost) == 'function' ? action.cost(player) : action.cost);
         var enoughResources = utils.checkResources(player, cost);
         
         return enoughResources;
@@ -88,11 +87,11 @@ var basic = (function() {
     function goat(player) {
         var newGoat = new Goat(player);
         
-        if (tech.hasTech(player, "Idleness")) {
-            newGoat.job = "Idler";
+        if (utils.hasTech(player, 'Idleness')) {
+            newGoat.job = 'Idler';
         }
         player.goats.push(newGoat);
-        utils.sendMessage(player, "A new goat joins your herd!");
+        utils.sendMessage(player, 'A new goat joins your herd!');
     }
     
     function graze(player, goat) {
@@ -103,14 +102,14 @@ var basic = (function() {
         var resName = resource.name;
 
         if (willEat) {
-            utils.sendMessage(player, goat.name + " munches on some " + resName + " (hunger now " + Math.round((goat.hunger / goat.maxHunger) * 100) + "%).");
+            utils.sendMessage(player, goat.name + ' munches on some ' + resName + ' (hunger now ' + Math.round((goat.hunger / goat.maxHunger) * 100) + '%).');
             eat(goat, resource, amount);
         } else {
             var invAmount = utils.addResource(player, resource, amount);
-            utils.sendMessage(player, goat.name + " returns with some " + resName + ". You now have " + invAmount + " " +
+            utils.sendMessage(player, goat.name + ' returns with some ' + resName + '. You now have ' + invAmount + ' ' +
                         (invAmount > 1 ?
                          ((resource.displayName && resource.displayName.plural) || resName) :
-                         (resource.displayName && resource.displayName.singular) || resource.name) + ".");
+                         (resource.displayName && resource.displayName.singular) || resource.name) + '.');
         }
 
         // For now, grazing will increment the player's explored counter by 1/8 automagically. Make this a chance or something later, probably?

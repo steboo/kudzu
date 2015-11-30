@@ -15,7 +15,7 @@ var kudzu = (function() {
     const STATUS_SUSPENDED = 1;
 
     function World() {
-        this.name = "Earth"; // TODO: expand possibilities, and make sure the planet doesn't already exist (register with other servers)
+        this.name = 'Earth'; // TODO: expand possibilities, and make sure the planet doesn't already exist (register with other servers)
         this.players = [];
         this.resources = allResources.list.sort(function(a, b) {
             return a.prominence - b.prominence;
@@ -31,7 +31,7 @@ var kudzu = (function() {
         this.resources = {};
         this.socket = socket;
         this.techs = [];
-        this.title = "the new kid"; // Maybe each goat should get a title
+        this.title = 'the new kid'; // Maybe each goat should get a title
         this.world = null;
     }
 
@@ -39,11 +39,11 @@ var kudzu = (function() {
     var tabs = {
         basic: { actions: basic.all, effect: basic.effect, prereq: basic.prereq },
         crafting: { actions: items.all, prereq: items.prereq },
-        equipment: { actions: equipment.all, effect: equipment.effect, prereq: equipment.prereq, template: "per_goat" },
-        exploration: { actions: { "attack": {} } },
-        management: { actions: jobs.all, effect: jobs.effect, prereq: jobs.prereq, template: "per_goat" }, // FIXME
+        equipment: { actions: equipment.all, effect: equipment.effect, prereq: equipment.prereq, template: 'per_goat' },
+        exploration: { actions: { 'attack': {} } },
+        management: { actions: jobs.all, effect: jobs.effect, prereq: jobs.prereq, template: 'per_goat' }, // FIXME
         research: { actions: tech.all, effect: tech.effect, prereq: tech.prereq }
-//        upgrades: { actions: null, effect: null, prereq: null, template: ["per_goat"] }
+//        upgrades: { actions: null, effect: null, prereq: null, template: ['per_goat'] }
     };
 
 
@@ -66,11 +66,11 @@ var kudzu = (function() {
                 if (player) {
                     var numPlayers = listener.clients.length - 1;
 
-                    socket.send("Welcome to " + world.name + "!");
-                    socket.send("You have " + player.goats.length + " goat(s).");
-                    socket.send("There are " + numPlayers + " other players connected.");
+                    socket.send('Welcome to ' + world.name + '!');
+                    socket.send('You have ' + player.goats.length + ' goat(s).');
+                    socket.send('There are ' + numPlayers + ' other players connected.');
                 } else {
-                    socket.send("There was an error setting up or loading your game. Please try again.");
+                    socket.send('There was an error setting up or loading your game. Please try again.');
                 }
 
                 socket.on('message', function(data) {
@@ -84,11 +84,19 @@ var kudzu = (function() {
                         action = command.action;
                         goat = command.goat;
                     } catch(e) {
-                        utils.sendMessage(player, "Invalid input!");
+                        utils.sendMessage(player, 'Invalid input!');
                         return;
                     }
 
-                    if (command.tab &&
+                    if (action == 'attack') {
+                        var target = randomPlayer(player);
+                        if (target) {
+                            attack(player, target);
+                        } else {
+                            // TODO: temporary
+                            utils.sendMessage(player, 'There\'s no one for you to attack right now!');
+                        }
+                    } else if (command.tab &&
                         action &&
                         tabs[command.tab] &&
                         (tabs[command.tab].actions[action].prereq ? tabs[command.tab].actions[action].prereq(player, goat) : true)) {
@@ -97,15 +105,13 @@ var kudzu = (function() {
                         } else {
                             tabs[command.tab].actions[action].effect(player, goat, command);
                         }
-                    } else if (data == "attack") {
-                        var target = randomPlayer(player);
-                        attack(player, target);
                     }
 
                     sendStatus(player);
                 });
 
                 socket.on('close', function() {
+                    console.log('Removing player');
                     var player = getPlayerBySocket(socket);
                     removePlayer(player);
                     if (listener.clients.length == 0) {
@@ -126,11 +132,12 @@ var kudzu = (function() {
     }
 
     function suspendWorld() {
-        console.log("Suspending world.");
+        console.log('Suspending world.');
         world.status = STATUS_SUSPENDED;
         clearInterval(timer);
     }
 
+    /* Player Handling */
     // We need to be able to add players to the world
     function addPlayer(world, socket) {
         var player = new Player(socket);
@@ -181,8 +188,8 @@ var kudzu = (function() {
     // Make the world go 'round!
     function tick() { // FIXME: operate on events instead of single-function model?
         if (world.status == STATUS_ACTIVE) {
-            console.log("Tick!");
-            broadcastMessage("Tick!");
+            console.log('Tick!');
+            broadcastMessage('Tick!');
             getHungry(world.players);
             world.players.forEach(jobs.doJobs);
             sendStatus(world.players);
@@ -201,8 +208,8 @@ var kudzu = (function() {
 
     
     function attack(player, target) {
-        utils.sendMessage(player, "You are attacking the herd of " + target.goats[0].name + " " + target.title + "!");
-        utils.sendMessage(target, "You are being attacked by the herd of " + player.goats[0].name + " " + player.title + "!");
+        utils.sendMessage(player, 'You are attacking the herd of ' + target.goats[0].name + ' ' + target.title + '!');
+        utils.sendMessage(target, 'You are being attacked by the herd of ' + player.goats[0].name + ' ' + player.title + '!');
         combat.handleRaid(player, target);
     }
 
@@ -259,7 +266,7 @@ var kudzu = (function() {
 
             if (actions &&
                 actions.length > 0) {
-                if (tab == "equipment") {
+                if (tab == 'equipment') {
                     actions = player.items;
                 }
 
@@ -286,9 +293,7 @@ var kudzu = (function() {
         });
     }
 
-    
     return {
-        addPlayer: addPlayer,
         initWorld: initWorld
     };
 })();
