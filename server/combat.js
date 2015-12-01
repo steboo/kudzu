@@ -21,7 +21,10 @@ var combat = (function() {
         // Outcome decided
         if (outcome.attackerLosses > 0) {
             killGoats(player, outcome.attackerLosses);
-            harvestLeather(target, outcome.attackerLosses);
+            if (player.goats.length > 0) {
+                // Attacker only gets leather if he has goats to carry it back!
+                harvestLeather(target, outcome.attackerLosses);
+            }
         }
 
         if (outcome.defenderLosses > 0) {
