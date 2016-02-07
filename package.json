@@ -18,12 +18,12 @@
   "homepage": "https://github.com/steboo/kudzu",
   "private": true,
   "dependencies": {
-    "cjson": "^0.3.2",
-    "express": "^4.13.1",
-    "ws": "^0.7.2"
+    "cjson": "^0.3.3",
+    "express": "^4.13.4",
+    "ws": "^1.0.1"
   },
   "devDependencies": {
     "gulp": "^3.9.0",
-    "gulp-eslint": "^1.0.0"
+    "gulp-eslint": "^1.1.1"
   }
 }
