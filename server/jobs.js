@@ -3,23 +3,23 @@ var jobs = (function() {
 
     var all = {
         /* Jobs */
-        "Idler": {
+        'Idler': {
             effect: function(goat) {
                 basic.graze(goat.player, goat); // FIXME: Idlers should eat from the home store first
             },
             frequency: 300,
             maxPerTick: 16 // FIXME: decide on ticks or seconds
         },
-        "Manager": {
+        'Manager': {
         },
-        "Number Cruncher": {
+        'Number Cruncher': {
         },
-        "Soldier": {
+        'Soldier': {
         }
     };
 
     function prereq(player, job) {
-        return player.techs.indexOf("Management") >= 0;
+        return player.techs.indexOf('Management') >= 0;
     }
 
     function effect(player, job, goatName) {

@@ -16,7 +16,7 @@ var basic = (function() {
                 player.goats.forEach(function(goat) {
                     graze(player, goat);
                 });
-                
+
                 player.clicks++;
             }
         },
@@ -42,7 +42,7 @@ var basic = (function() {
         this.smarts = 0;
         this.wanderLust = 0; // For future use
         this.xp = 0;
-    };
+    }
 
     function effect(player, actionName) {
         var action = all[actionName];

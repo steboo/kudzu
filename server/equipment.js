@@ -19,7 +19,7 @@ var items = (function() {
     function effect(player, action, unused, args) {
         var item = args.item;
 
-        if (action == "equip") {
+        if (action == 'equip') {
             var from = args.from,
                 to = args.to,
                 fromGoat = from && utils.findGoat(player, from),
@@ -34,7 +34,6 @@ var items = (function() {
             } else if (toGoat && fromGoat) {
                 transferItem(item, fromGoat, toGoat);
             }
-        } else {
         }
     }
 

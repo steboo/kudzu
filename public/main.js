@@ -1,4 +1,4 @@
-(function () {
+(function ($) {
     var ws,
         wsUri = 'ws://localhost:9000/';
     var goats;
@@ -68,7 +68,7 @@
                             .attr('data-action', action);
                     $action.text(action).appendTo($actions);
                 });
-            } else if (template == "per_goat") {
+            } else if (template == 'per_goat') {
                 if (goats && goats.length > 0) {
                     goats.forEach(function(goat) {
                         var $div = $('<div/>').addClass('goat-actions'),
@@ -243,7 +243,7 @@
                 $tab.addClass('selected');
                 selected = tab;
 
-                if (tab == "equipment") {
+                if (tab == 'equipment') {
                     updateEquipment(tabs[tab].actions);
                 } else {
                     updateActions(tabs[tab].actions, tabs[tab].template);
@@ -270,12 +270,12 @@
                             toggleTab.classList.remove('selected');
                             $actions[0].classList.remove(tabName);
                         }
-                    };
+                    }
 
                     var actions = JSON.parse(e.target.getAttribute('data-actions'));
                     var template = JSON.parse(e.target.getAttribute('data-template'));
 
-                    if (clickedName == "equipment") {
+                    if (clickedName == 'equipment') {
                         updateEquipment(actions);
                     } else {
                         updateActions(actions, template);
@@ -383,7 +383,7 @@
 
         $('form.actions').on('click', 'button.reconnect', function (e) {
             e.preventDefault();
-            resetState();
+            //resetState();
             wsInit(wsUri);
         });
 
@@ -433,7 +433,7 @@
             if (item &&
                 (item.parentNode != e.target.parentNode)) {
                 var stanza = {
-                    action: "equip",
+                    action: 'equip',
                     from: oldParent,
                     item: item.textContent,
                     tab: getSelectedTab(),
@@ -479,4 +479,4 @@
 
     wsInit(wsUri);
     bind();
-})();
+})(jQuery);

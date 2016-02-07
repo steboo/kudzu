@@ -18,7 +18,7 @@ var app = express();
 
 app.use(express.static('public'));
 
-var server = app.listen(httpPort, function () {
+app.listen(httpPort, function () {
     console.log('HTTP server listening on port %s...', httpPort);
 });
 
