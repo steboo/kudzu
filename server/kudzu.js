@@ -69,6 +69,7 @@ var kudzu = (function() {
                     socket.send('Welcome to ' + world.name + '!');
                     socket.send('You have ' + player.goats.length + ' goat(s).');
                     socket.send('There are ' + numPlayers + ' other players connected.');
+                    sendStatus(player);
                 } else {
                     socket.send('There was an error setting up or loading your game. Please try again.');
                 }
@@ -114,6 +115,7 @@ var kudzu = (function() {
                     console.log('Removing player');
                     var player = getPlayerBySocket(socket);
                     removePlayer(player);
+
                     if (listener.clients.length == 0) {
                         suspendWorld();
                     }
@@ -157,7 +159,7 @@ var kudzu = (function() {
                 worldPlayers.splice(playerIndex, 1);
             }
         } else {
-            world.players.filter(function(value) {
+            world.players = world.players.filter(function(value) {
                 return value !== null;
             });
         }
@@ -210,7 +212,10 @@ var kudzu = (function() {
     function attack(player, target) {
         utils.sendMessage(player, 'You are attacking the herd of ' + target.goats[0].name + ' ' + target.title + '!');
         utils.sendMessage(target, 'You are being attacked by the herd of ' + player.goats[0].name + ' ' + player.title + '!');
-        combat.handleRaid(player, target);
+        combat.handleRaid(player, target, function() {
+            sendStatus(player);
+            sendStatus(target);
+        });
     }
 
 

@@ -79,8 +79,9 @@ var utilities = (function() {
     // Send a message to a player
     function sendMessage(player, msg) {
         var socket = player.socket;
-
-        socket.send(msg);
+        /* If the player is offline, .send will throw an error.
+         * For now, we'll ignore it by passing in a null error handler. */
+        socket.send(msg, function() {});
     }
 
     function sendJSON(player, object) {
@@ -88,7 +89,6 @@ var utilities = (function() {
 
         sendMessage(player, JSONified);
     }
-
 
     /* General Utilities */
     function weightedRandom(resources) {

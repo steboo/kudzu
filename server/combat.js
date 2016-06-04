@@ -13,10 +13,11 @@ var combat = (function() {
     }
 
     // TODO: currently you have to attack with all your goats; implement squads/military
-    function handleRaid(player, target) {
+    function handleRaid(player, target, callback) {
         // Goats fight
         var outcome = resolveCombat(player.goats.length, target.goats.length);
         reportOutcome(outcome, player, target);
+        callback && callback();
 
         // Outcome decided
         if (outcome.attackerLosses > 0) {
@@ -59,7 +60,7 @@ var combat = (function() {
 
     function loseGame(player) {
         utils.sendMessage(player, 'You lose!');
-        player.socket.close(); // FIXME: bug here: Error caught in socket domain:Error: not opened
+        player.socket.close();
     }
 
     function raidOutcome(winner, loser) {
@@ -124,7 +125,6 @@ var combat = (function() {
     return {
         handleRaid: handleRaid
     };
-
 })();
 
 module.exports = combat;
