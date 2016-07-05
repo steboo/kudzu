@@ -98,9 +98,10 @@ var kudzu = (function() {
                             utils.sendMessage(player, 'There\'s no one for you to attack right now!');
                         }
                     } else if (command.tab &&
-                        action &&
-                        tabs[command.tab] &&
-                        (tabs[command.tab].actions[action].prereq ? tabs[command.tab].actions[action].prereq(player, goat) : true)) {
+                               action &&
+                               tabs[command.tab] &&
+                               (tabs[command.tab].actions[action].prereq ?
+                                tabs[command.tab].actions[action].prereq(player, goat) : true)) {
                         if (tabs[command.tab].effect) {
                             tabs[command.tab].effect(player, action, goat, command);
                         } else {
@@ -226,9 +227,12 @@ var kudzu = (function() {
         var available = [];
 
         for (var action in actions) {
-            if ((pred == null || pred(player, action)) &&
-                (actions[action].prereq == null || (actions[action].prereq(player)))) {
-                available.push(action);
+            if (pred == null || pred(player, action)) {
+                if ((actions[action.prereq] == null) ||
+                    ((typeof actions[action].prereq == 'Function') &&
+                     actions[action].prereq(player))) {
+                    available.push(action);
+                }
             }
         }
 

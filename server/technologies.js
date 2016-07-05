@@ -13,30 +13,32 @@ var technologies = (function() {
                 kudzu: 10
             },
             minSmarts: 5,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Idleness');
+            prereq: {
+                tech: ['Idleness']
             }
         }, // TODO: need cost, minsmarts
 
         'Crime': {
             cost: {},
             minSmarts: 15,
-            prereq: function(player) {
-                return !utils.hasTech(player, 'Billy Club');
+            prereq: {
+                tech: function(player) {
+                    return !utils.hasTech(player, 'Billy Club');
+                }
             }
         }, // TODO: no effect yet
 
         'Currency': {
             cost: {},
             minSmarts: 100,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Mathematics');
+            prereq: {
+                tech: ['Mathematics']
             }
         }, // TODO: no effect yet
 
         'Friendship': {
-            prereq: function(player) {
-                return utils.hasTech(player, 'Love');
+            prereq: {
+                tech: ['Love']
             }
         }, // TODO: no effect yet
 
@@ -61,8 +63,8 @@ var technologies = (function() {
         'Management': {
             cost: { 'knapweed': 25 },
             minSmarts: 10,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Idleness');
+            prereq: {
+                tech: ['Idleness']
             }
         },
 
@@ -75,17 +77,16 @@ var technologies = (function() {
         }, // TODO: no effect yet
 
         'Peace': {
-            prereq: function(player) {
-                return utils.hasTech(player, 'War') &&
-                       utils.hasTech(player, 'Friendship');
+            prereq: {
+                tech: ['War', 'Friendship']
             }
         }, // TODO: no effect yet
 
         'Prejudice': {
             cost: {},
             minSmarts: 150,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Pride');
+            prereq: {
+                tech: ['Pride']
             }
         }, // TODO: no effect yet
 
@@ -95,8 +96,8 @@ var technologies = (function() {
         'Punishment': {
             cost: {},
             minSmarts: 25,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Crime');
+            prereq: {
+                tech: ['Crime']
             }
         }, // TODO: no effect yet
 
@@ -112,70 +113,104 @@ var technologies = (function() {
         'Sensibility': {
             cost: {},
             minSmarts: 130,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Sense');
+            prereq: {
+                tech: ['Sense']
             }
         }, // TODO: no effect yet
 
         'Sharpened Hooves': {
             cost: { rocks: 25 },
             minSmarts: 25,
-            prereq: function(player) {
-                var resources = { rocks: 15 };
-                return utils.hasTech(player, 'Weaponry') &&
-                       utils.checkResources(player, resources);
+            prereq: {
+                resources: { rocks: 15 },
+                tech: ['Weaponry']
             }
         },
 
         'Tools': {
             cost: {},
             minSmarts: 20,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Woodgnawing');
+            prereq: {
+                tech: ['Woodgnawing']
             }
         }, // TODO: no effect yet
 
         'Trade': {
             cost: {},
             minSmarts: 25,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Mathematics');
+            prereq: {
+                tech: ['Mathematics']
             }
         }, // TODO: no effect yet
 
         'War': {
             cost: {},
             minSmarts: 15,
-            prereq: function(player) {
+            prereq: {
                 // Player must have discovered at least one neighbor
-                return true;
             }
         }, // TODO: no effect yet
 
         'Weaponry': {
             cost: {},
             minSmarts: 25,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Tools') &&
-                       utils.hasTech(player, 'War');
+            prereq: {
+                tech: ['Tools', 'War']
             }
         }, // TODO: no effect yet
 
         'Weaving': {
             minSmarts: 5,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Craftsgoatship');
+            prereq: {
+                tech: ['Craftsgoatship']
             }
         },
 
         'Woodgnawing': {
             cost: {},
             minSmarts: 18,
-            prereq: function(player) {
-                return utils.hasTech(player, 'Craftsgoatship');
+            prereq: {
+                tech: ['Craftsgoatship']
             }
         } // TODO: no effect yet
     };
+
+    function prereqMet(player, prereqs) {
+        function checkTech(prereq) {
+            var type = typeof prereq;
+
+            if (type == 'String') {
+                return utils.hasTech(player, prereq);
+            } else if (prereq.map) {
+                return prereq.every(function(item) {
+                    return checkTech(item);
+                });
+            } else if (type == 'Function') {
+                return type(player);
+            }
+        }
+
+        var prereqFns = {
+            resources: function(pr) {
+                return utils.checkResources(player, pr);
+            },
+            tech: checkTech
+        };
+
+        var types = Object.keys(prereqs || {});
+
+        var result = (types.length == 0) ||
+            types.every(function(type) {
+                if (!prereqFns[type]) {
+                    console.error('No prereq function for prereq type ' + type);
+                    return false;
+                }
+
+                return prereqFns[type](prereqs[type]);
+            });
+
+        return result;
+    }
 
     function effect(player, techName) {
         var tech = allTechs[techName];
@@ -189,13 +224,13 @@ var technologies = (function() {
         var goat = player.goats.reduce(function(goat1, goat2) {
             return (goat1.smarts > goat2.smarts ? goat1 : goat2);
         });
+
         var tech = allTechs[techName];
 
         if (!utils.hasTech(player, techName) &&
             utils.checkResources(player, tech.cost) &&
             goat.smarts >= tech.minSmarts &&
-            (tech.prereq == null ||
-             allTechs[techName].prereq(player))) {
+            prereqMet(player, tech.prereq)) {
             return true;
         } else {
             return false;
