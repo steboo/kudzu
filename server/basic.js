@@ -74,7 +74,8 @@ var basic = (function() {
     }
 
     function eat(goat, resource, amount) {
-        goat.hunger -= (resource.nourishment * (amount || 1)) / 100;
+        goat.hunger -= (1.3 * resource.nourishment * (amount || 1)) / 100;
+
         if (goat.hunger <= 0) {
             goat.hunger = 0;
         }
