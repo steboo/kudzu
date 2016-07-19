@@ -1,6 +1,6 @@
 (function ($) {
     var ws,
-        wsUri = 'ws://localhost:9000/';
+        wsUri = 'ws://' + location.hostname + ':9000/';
     var goats;
 
     function logDebug(message) {
